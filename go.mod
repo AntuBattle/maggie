@@ -1,6 +1,6 @@
 module github.com/mulgadc/maggie
 
-go 1.27
+go 1.27.2
 
 tool golang.org/x/vuln/cmd/govulncheck
 
