@@ -23,7 +23,7 @@ Three container roles come out of the same image, selected by the first argument
 
 ## Before you start
 
-- **Pin `bd` to one version for everyone.** The stack ships the version in `BD_VERSION` (currently v1.2.2). A server and clients on mismatched `bd` versions cause schema skew and breakage. This is the single biggest adoption risk — confirm `bd version` matches across the team before cutover, not after.
+- **Pin `bd` to one version for everyone.** The stack ships the version in `BD_VERSION` (currently v1.3.1). A server and clients on mismatched `bd` versions cause schema skew and breakage. This is the single biggest adoption risk — confirm `bd version` matches across the team before cutover, not after.
 - **Decide on accounts.** Clients connect as a shared least-privilege account (read/write, no `DROP`). `root` stays as break-glass.
 - **Enable Docker on boot.** Both services carry `restart: unless-stopped`, so they survive crashes and reboots — but only if the daemon starts on boot: `sudo systemctl enable --now docker`. Note the `unless-stopped` semantics: a manual `docker compose down` or `stop` sticks across a reboot. Only a running stack auto-resumes.
 
@@ -41,12 +41,17 @@ Three container roles come out of the same image, selected by the first argument
 
 2. Put that file at `./snapshot/issues.jsonl`.
 
-3. Choose credentials and the bind interface:
+3. Choose credentials and the bind interface, and keep them in `.env` (gitignored) rather than exporting them in a shell:
 
    ```bash
-   export DOLT_PASSWORD='<strong-password>'
-   export DOLT_ADDR=0.0.0.0        # interface to publish 3307 on
+   cat > .env <<'EOF'
+   DOLT_PASSWORD='<strong-password>'
+   DOLT_ADDR=0.0.0.0
+   EOF
+   chmod 600 .env
    ```
+
+   Compose reads `.env` on every `up`, so a container recreated later from a different shell keeps its password. A value exported in one shell is lost there, and maggie restarts in a loop on `Access denied for user 'beads'`. `DOLT_ADDR` is the interface `docker-compose.publish.yml` publishes 3307 on.
 
 4. Build, seed and start:
 
