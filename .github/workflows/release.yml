@@ -55,8 +55,6 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: MAGGIE_VERSION=${{ steps.meta.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       # Catches the failure mode of building from a stale tree: the tag says one
       # thing and the binary inside says another.
