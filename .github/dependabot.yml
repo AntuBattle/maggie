@@ -50,3 +50,29 @@ updates:
       npm-dependencies:
         patterns:
           - "*"
+
+  - package-ecosystem: docker
+    target-branch: dev
+    directory: /
+    schedule:
+      interval: weekly
+      day: sunday
+      timezone: Australia/Sydney
+    cooldown:
+      default-days: 3
+    # Go 1.27.2 and Node 24.14.0 are deliberate; only their digests should move.
+    ignore:
+      - dependency-name: golang
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+      - dependency-name: node
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+    groups:
+      docker-images:
+        patterns:
+          - "*"
