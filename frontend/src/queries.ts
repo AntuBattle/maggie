@@ -59,20 +59,24 @@ export function useIssue(id: string) {
 // every tab reflects the change without a manual reload.
 function useIssueWrites() {
   const qc = useQueryClient()
+
   const settle = (fresh: Issue | undefined, id: string) => {
     if (fresh) {
       qc.setQueryData(["issue", id], fresh)
     }
+
     void qc.invalidateQueries({ queryKey: ["issues"] })
     void qc.invalidateQueries({ queryKey: ["ready"] })
     void qc.invalidateQueries({ queryKey: ["graph"] })
     void qc.invalidateQueries({ queryKey: ["issue", id] })
   }
+
   return { settle }
 }
 
 export function useUpdateIssue() {
   const { settle } = useIssueWrites()
+
   return useMutation({
     mutationFn: async (v: {
       id: string
@@ -87,6 +91,7 @@ export function useUpdateIssue() {
 
 export function useAddComment() {
   const { settle } = useIssueWrites()
+
   return useMutation({
     mutationFn: async (v: { id: string; actor: string; text: string }) =>
       await addComment(v.id, v.actor, v.text),
@@ -98,6 +103,7 @@ export function useAddComment() {
 
 export function useAddDep() {
   const { settle } = useIssueWrites()
+
   return useMutation({
     mutationFn: async (v: {
       id: string

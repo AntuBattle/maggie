@@ -25,6 +25,7 @@ export function ActorMenu() {
 
   const submitDraft = () => {
     const v = draft.trim()
+
     if (ACTOR_RE.test(v)) {
       setDraft("")
       pick(v)

@@ -43,6 +43,9 @@ interface Node extends SimulationNodeDatum {
 
 interface Link extends SimulationLinkDatum<Node> {
   key: string
+  // endpoint ids; d3-force rewrites source/target to node objects in place
+  from: string
+  to: string
   dashed: boolean
 }
 
@@ -60,6 +63,7 @@ function Graph() {
   // filters as the table and board. The result has to be referentially stable:
   // a fresh node array each render restarts the simulation before it can tick.
   const filters = useMemo(() => paramsToFilters(search), [search])
+
   const filtered = useMemo(
     () => applyFilters(issues ?? [], filters),
     [issues, filters],
@@ -69,6 +73,7 @@ function Graph() {
     () => filtered.some((i) => (i.labels ?? []).length > 0),
     [filtered],
   )
+
   const [pref, setPref] = useState<boolean | null>(null)
   const clustered = pref ?? hasLabels
 
@@ -79,6 +84,7 @@ function Graph() {
   const { nodes, links } = useMemo(() => {
     const byId = new Map<string, Issue>(filtered.map((i) => [i.id, i]))
     let graphNodes: Node[]
+
     if (clustered) {
       graphNodes = filtered
         .filter((i) => (i.labels ?? []).length > 0)
@@ -90,35 +96,45 @@ function Graph() {
         }))
     } else {
       const ids = new Set<string>()
+
       for (const e of edges ?? []) {
         if (byId.has(e.from) && byId.has(e.to)) {
           ids.add(e.from)
           ids.add(e.to)
         }
       }
+
       graphNodes = [...ids].map((id) => {
         const i = byId.get(id)
+
         return { id, title: i?.title ?? id, status: i?.status ?? "open" }
       })
     }
+
     const present = new Set(graphNodes.map((n) => n.id))
+
     const graphLinks: Link[] = (edges ?? [])
       .filter((e) => present.has(e.from) && present.has(e.to))
       .map((e) => ({
         key: `${e.from}->${e.to}`,
+        from: e.from,
+        to: e.to,
         source: e.from,
         target: e.to,
         dashed: e.dashed,
       }))
+
     return { nodes: graphNodes, links: graphLinks }
   }, [filtered, edges, clustered])
 
   if (li || le) {
     return <p className="text-muted">loading…</p>
   }
+
   if (error) {
     return <p className="text-st-blocked">error: {error.message}</p>
   }
+
   if (nodes.length === 0) {
     return (
       <p className="text-muted">
@@ -191,6 +207,7 @@ function ForceGraph({
   const [pos, setPos] = useState<PosMap>(new Map())
   const [tf, setTf] = useState<ZoomTransform>(zoomIdentity)
   const [size, setSize] = useState({ w: 800, h: 600 })
+  const nodeById = useMemo(() => new Map(nodes.map((n) => [n.id, n])), [nodes])
 
   // Distinct primary labels become the cluster anchors, laid out on a ring.
   const clusterLabels = useMemo(
@@ -200,34 +217,42 @@ function ForceGraph({
       ].toSorted(),
     [nodes],
   )
+
   const centers = useMemo(() => {
     const m = new Map<string, { x: number; y: number }>()
     const cx = size.w / 2
     const cy = size.h / 2
     const r = Math.min(size.w, size.h) * 0.34
+
     for (const [i, l] of clusterLabels.entries()) {
       if (clusterLabels.length === 1) {
         m.set(l, { x: cx, y: cy })
         continue
       }
+
       const a = (i / clusterLabels.length) * 2 * Math.PI - Math.PI / 2
       m.set(l, { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) })
     }
+
     return m
   }, [clusterLabels, size.w, size.h])
 
   useEffect(() => {
     const el = svgRef.current
+
     const ro = new ResizeObserver(([entry]) => {
       if (!entry) {
         return
       }
+
       const { width, height } = entry.contentRect
       setSize({ w: width, h: height })
     })
+
     if (el) {
       ro.observe(el)
     }
+
     return () => {
       ro.disconnect()
     }
@@ -243,21 +268,26 @@ function ForceGraph({
       )
       .force("charge", forceManyBody().strength(clustered ? -140 : -320))
       .force("collide", forceCollide(clustered ? 20 : 28))
+
     if (clustered) {
       const at = (n: Node, k: "x" | "y") => {
         const c = centers.get(n.label ?? "")
+
         return k === "x" ? (c?.x ?? size.w / 2) : (c?.y ?? size.h / 2)
       }
+
       sim
         .force("x", forceX<Node>((n) => at(n, "x")).strength(0.25))
         .force("y", forceY<Node>((n) => at(n, "y")).strength(0.25))
     } else {
       sim.force("center", forceCenter(size.w / 2, size.h / 2))
     }
+
     sim.on("tick", () => {
       setPos(snapshot(nodes))
     })
     simRef.current = sim
+
     return () => {
       sim.stop()
     }
@@ -265,14 +295,17 @@ function ForceGraph({
 
   useEffect(() => {
     const el = svgRef.current
+
     if (el) {
       const z = zoom<SVGSVGElement, unknown>()
         .scaleExtent([0.2, 4])
         .on("zoom", (e: D3ZoomEvent<SVGSVGElement, unknown>) => {
           setTf(e.transform)
         })
+
       select(el).call(z)
     }
+
     return () => {
       if (el) {
         select(el).on(".zoom", null)
@@ -283,20 +316,24 @@ function ForceGraph({
   const drag = (n: Node) => (e: React.PointerEvent) => {
     e.stopPropagation()
     const sim = simRef.current
+
     if (!sim) {
       return
     }
+
     const move = (ev: PointerEvent) => {
       n.fx = tf.invertX(ev.offsetX)
       n.fy = tf.invertY(ev.offsetY)
       sim.alpha(0.3).restart()
     }
+
     const up = () => {
       n.fx = null
       n.fy = null
       window.removeEventListener("pointermove", move)
       window.removeEventListener("pointerup", up)
     }
+
     window.addEventListener("pointermove", move)
     window.addEventListener("pointerup", up)
   }
@@ -309,15 +346,19 @@ function ForceGraph({
           .filter((n) => n.label === label)
           .map((n) => pos.get(n.id))
           .filter((p): p is Pos => p !== undefined)
+
         if (!members.length) {
           return { label, cx: 0, cy: 0, r: 0 }
         }
+
         const cx = members.reduce((s, p) => s + p.x, 0) / members.length
         const cy = members.reduce((s, p) => s + p.y, 0) / members.length
+
         const r = Math.max(
           46,
           ...members.map((p) => Math.hypot(p.x - cx, p.y - cy)),
         )
+
         return { label, cx, cy, r: r + 34 }
       })
     : []
@@ -341,6 +382,7 @@ function ForceGraph({
         <g transform={tf.toString()}>
           {bubbles.map((b) => {
             const h = labelHue(b.label)
+
             return (
               <g key={`bubble:${b.label}`} className="pointer-events-none">
                 <circle
@@ -366,12 +408,16 @@ function ForceGraph({
             )
           })}
           {links.map((l) => {
-            // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- d3-force resolves endpoints to nodes
-            const s = l.source as Node
-            // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- d3-force resolves endpoints to nodes
-            const t = l.target as Node
+            const s = nodeById.get(l.from)
+            const t = nodeById.get(l.to)
+
+            if (!s || !t) {
+              return null
+            }
+
             const a = posOf(pos, s)
             const b = posOf(pos, t)
+
             return (
               <line
                 key={l.key}
@@ -453,6 +499,7 @@ function Legend() {
     "deferred",
     "closed",
   ]
+
   return (
     <div className="absolute top-3 right-3 rounded-md border border-line bg-bg/80 px-3 py-2 text-xs">
       {items.map((s) => (

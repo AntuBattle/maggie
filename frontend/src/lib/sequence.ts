@@ -11,10 +11,12 @@ const STATUS_RANK = new Map<Status, number>([
 function less(a: number[], b: number[]): boolean {
   for (const [i, av] of a.entries()) {
     const bv = b[i] ?? 0
+
     if (av !== bv) {
       return av < bv
     }
   }
+
   return false
 }
 
@@ -33,13 +35,16 @@ export function suggestSequence(
   const byId = new Map(actionable.map((i) => [i.id, i]))
 
   const blockers = new Map<string, Set<string>>()
+
   for (const id of inSet) {
     blockers.set(id, new Set())
   }
+
   for (const e of edges) {
     if (e.dashed || !inSet.has(e.from) || !inSet.has(e.to)) {
       continue
     }
+
     blockers.get(e.to)?.add(e.from)
   }
 
@@ -54,6 +59,7 @@ export function suggestSequence(
         return true
       }
     }
+
     return false
   }
 
@@ -64,35 +70,45 @@ export function suggestSequence(
     const prev = prevLabels
     let best: string | null = null
     let bestKey: number[] | null = null
+
     for (const id of candidates) {
       const i = byId.get(id)
+
       if (!i) {
         continue
       }
+
       const affinity = (i.labels ?? []).some((l) => prev.has(l)) ? 0 : 1
       const updated = Date.parse(i.updated_at ?? "")
+
       const key = [
         STATUS_RANK.get(i.status) ?? 3,
         i.priority,
         affinity,
         Number.isNaN(updated) ? 0 : -updated,
       ]
+
       if (!bestKey || less(key, bestKey)) {
         bestKey = key
         best = id
       }
     }
+
     if (!best) {
       break
     }
+
     const picked = byId.get(best)
+
     if (picked) {
       order.push(picked)
       prevLabels = new Set(picked.labels)
     }
+
     remaining.delete(best)
     done.add(best)
   }
+
   return order
 }
 
@@ -104,11 +120,14 @@ export function prereqIds(
 ): Map<string, string[]> {
   const ids = new Set(issues.map((i) => i.id))
   const m = new Map<string, string[]>()
+
   for (const e of edges) {
     if (e.dashed || !ids.has(e.from) || !ids.has(e.to)) {
       continue
     }
+
     m.set(e.to, [...(m.get(e.to) ?? []), e.from])
   }
+
   return m
 }

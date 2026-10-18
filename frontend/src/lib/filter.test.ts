@@ -159,6 +159,7 @@ describe("sortIssues", () => {
       [issue("x", { priority: 10 }), issue("y", { priority: 9 })],
       { key: "priority", dir: "asc" },
     )
+
     expect(got.map((i) => i.priority)).toEqual([9, 10])
   })
 
@@ -177,6 +178,7 @@ describe("sortIssues", () => {
       key: "assignee",
       dir: "asc",
     })
+
     expect(got.map((i) => i.id)).toEqual(["b", "a"])
   })
 
@@ -265,6 +267,7 @@ describe("filtersToParams", () => {
       assignee: "ana",
       label: "ui",
     })
+
     expect(paramsToFilters(filtersToParams(f))).toEqual(f)
   })
 })

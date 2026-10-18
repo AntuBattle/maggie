@@ -50,9 +50,11 @@ export interface Edge {
 
 async function getJSON<T>(path: string): Promise<T> {
   const res = await fetch(path)
+
   if (!res.ok) {
     throw new Error(`${path} -> ${res.status}`)
   }
+
   // The caller names the response shape, and a non-ok status is handled above.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- res.json() returns Promise<any>
   return await (res.json() as Promise<T>)
@@ -76,6 +78,7 @@ export async function fetchActors(): Promise<string[]> {
 
 export async function fetchIssue(id: string): Promise<Issue | undefined> {
   const arr = await getJSON<Issue[]>(`/api/issue?id=${encodeURIComponent(id)}`)
+
   return arr[0]
 }
 
@@ -96,18 +99,22 @@ async function postJSON(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   })
+
   if (!res.ok) {
     throw new Error(
       (await res.text().catch(() => "")) || `${path} -> ${res.status}`,
     )
   }
+
   if (res.status === 204) {
     return undefined
   }
+
   // Every write replies with the refreshed issue, and a non-ok status is
   // handled above.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- res.json() returns Promise<any>
   const arr = (await res.json()) as Issue[]
+
   return arr[0]
 }
 

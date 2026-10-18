@@ -12,6 +12,7 @@ import type { GroupNode, LabelGroup, Sort, SortKey } from "@/lib/filter"
 
 function TitleCell({ i }: { i: Issue }) {
   const labels = i.labels ?? []
+
   return (
     <td className="px-3 py-2" title={i.title}>
       <div className="flex min-w-0 items-center gap-2">
@@ -33,7 +34,9 @@ function fmtDate(ts?: string) {
   if (!ts) {
     return "—"
   }
+
   const d = new Date(ts)
+
   return Number.isNaN(d.getTime()) ? ts : d.toISOString().slice(0, 10)
 }
 
@@ -101,25 +104,30 @@ export function IssueTable({
   onSelect: (id: string) => void
 }) {
   const [open, setOpen] = useState<Set<string>>(new Set())
+
   const toggleSort = (key: SortKey) => {
     onSortChange({
       key,
       dir: sort.key === key && sort.dir === "asc" ? "desc" : "asc",
     })
   }
+
   const toggleEpic = (id: string) => {
     setOpen((prev) => {
       const next = new Set(prev)
+
       if (next.has(id)) {
         next.delete(id)
       } else {
         next.add(id)
       }
+
       return next
     })
   }
 
   let body: ReactNode
+
   if (labelGroups) {
     body = labelGroups.map((g) => (
       <LabelSection
@@ -300,6 +308,7 @@ function LabelSection({
   onSelect: (id: string) => void
 }) {
   const { label, issues } = group
+
   return (
     <>
       <tr

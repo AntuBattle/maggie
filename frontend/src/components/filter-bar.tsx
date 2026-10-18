@@ -30,10 +30,12 @@ function StatusChips({
       active.includes(s) ? active.filter((x) => x !== s) : [...active, s],
     )
   }
+
   return (
     <div className="flex items-center gap-1">
       {ALL_STATUSES.map((s) => {
         const on = active.includes(s)
+
         return (
           <button
             key={s}
@@ -72,11 +74,14 @@ export function FilterBar({
   // Memoised so the derived lists below keep a stable dependency.
   const all = useMemo(() => issues ?? [], [issues])
   const types = useMemo(() => uniqueSorted(all.map((i) => i.issue_type)), [all])
+
   const assignees = useMemo(
     () => uniqueSorted(all.map((i) => i.assignee)),
     [all],
   )
+
   const labels = useMemo(() => allLabels(all), [all])
+
   const matched = useMemo(
     () => applyFilters(all, filters).length,
     [all, filters],
@@ -85,6 +90,7 @@ export function FilterBar({
   const set = (patch: Partial<Filters>) => {
     onChange({ ...filters, ...patch })
   }
+
   const dirty = JSON.stringify(filters) !== JSON.stringify(EMPTY_FILTERS)
 
   return (

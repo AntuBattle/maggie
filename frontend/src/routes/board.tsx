@@ -32,6 +32,7 @@ function cardClass(dragging: boolean, draggable: boolean): string {
   if (dragging) {
     return "opacity-50"
   }
+
   return draggable ? "cursor-grab" : ""
 }
 
@@ -47,6 +48,7 @@ function Board() {
   const [claim, setClaim] = useState<Claim | null>(null)
 
   const filters = paramsToFilters(search)
+
   const items = useMemo(
     () => applyFilters(data ?? [], filters),
     [data, filters],
@@ -60,10 +62,13 @@ function Board() {
     if (!actor || to === issue.status) {
       return
     }
+
     const patch: UpdatePayload = { status: to }
+
     if (assignee !== undefined) {
       patch.assignee = assignee
     }
+
     update.mutate({ id: issue.id, actor, patch })
   }
 
@@ -71,25 +76,31 @@ function Board() {
     setOverCol(null)
     const issue = items.find((i) => i.id === dragId)
     setDragId(null)
+
     if (!issue || to === issue.status) {
       return
     }
+
     // Claiming: an unassigned bead entering in_progress asks who owns it.
     if (to === "in_progress" && !issue.assignee) {
       setClaim({ issue, to })
+
       return
     }
+
     move(issue, to)
   }
 
   if (isLoading) {
     return <p className="text-muted">loading…</p>
   }
+
   if (error) {
     return <p className="text-st-blocked">error: {error.message}</p>
   }
 
   const grouped = new Map<Status, Issue[]>(COLUMNS.map((s) => [s, []]))
+
   for (const issue of items) {
     grouped.get(issue.status)?.push(issue)
   }
@@ -177,6 +188,7 @@ function ClaimDialog({
   const { data } = useActors()
   const [assignee, setAssignee] = useState(defaultAssignee)
   const roster = data ?? []
+
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
       <div className="w-80 rounded-lg border border-line bg-panel p-4 shadow-2xl">

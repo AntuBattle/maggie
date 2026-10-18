@@ -45,14 +45,17 @@ function useFocus(): [string, (v: string) => void] {
   const [focus, setFocus] = useState(
     () => localStorage.getItem("maggie.focus") ?? "",
   )
+
   const set = (v: string) => {
     setFocus(v)
+
     if (v) {
       localStorage.setItem("maggie.focus", v)
     } else {
       localStorage.removeItem("maggie.focus")
     }
   }
+
   return [focus, set]
 }
 
@@ -78,12 +81,16 @@ function Dashboard() {
   const matchesFocus = useMemo(() => {
     if (focus.startsWith("asgn:")) {
       const a = focus.slice(5)
+
       return (i: Issue) => (i.assignee ?? "") === a
     }
+
     if (focus.startsWith("pref:")) {
       const p = focus.slice(5)
+
       return (i: Issue) => idPrefix(i.id) === p
     }
+
     return null
   }, [focus])
 
@@ -91,8 +98,10 @@ function Dashboard() {
   // person's (or prefix's) beads are sequenced.
   const sequence = useMemo(() => {
     const pool = matchesFocus ? all.filter(matchesFocus) : all
+
     return suggestSequence(pool, edges, 5)
   }, [all, edges, matchesFocus])
+
   const prereqs = useMemo(() => prereqIds(sequence, edges), [sequence, edges])
 
   const counts = useMemo(() => {
@@ -103,9 +112,11 @@ function Dashboard() {
       deferred: 0,
       closed: 0,
     } satisfies Record<Status, number>
+
     for (const i of all) {
       c[i.status] += 1
     }
+
     return c
   }, [all])
 
@@ -116,11 +127,14 @@ function Dashboard() {
 
   const priBars = useMemo(() => {
     const c = [0, 0, 0, 0, 0]
+
     for (const i of openIssues) {
       const p = Math.min(Math.max(i.priority, 0), 4)
       c[p] = (c[p] ?? 0) + 1
     }
+
     const max = Math.max(1, ...c)
+
     return c.map((n, p) => ({ p, n, pct: Math.round((n / max) * 100) }))
   }, [openIssues])
 
@@ -132,10 +146,12 @@ function Dashboard() {
         .slice(0, 8),
     [openIssues],
   )
+
   const recent = useMemo(
     () => openIssues.toSorted(byUpdatedDesc).slice(0, 8),
     [openIssues],
   )
+
   const readyTop = useMemo(
     () => ready.toSorted(byPriority).slice(0, 8),
     [ready],
@@ -143,12 +159,15 @@ function Dashboard() {
 
   const labelStreams = useMemo(() => {
     const c = new Map<string, number>()
+
     for (const i of openIssues) {
       for (const l of i.labels ?? []) {
         c.set(l, (c.get(l) ?? 0) + 1)
       }
     }
+
     const max = Math.max(1, ...c.values())
+
     return [...c.entries()]
       .toSorted((a, b) => b[1] - a[1])
       .slice(0, 10)
@@ -167,15 +186,18 @@ function Dashboard() {
       ),
     [all],
   )
+
   const assignees = useMemo(
     () => uniqueSorted(actionable.map((i) => i.assignee)),
     [actionable],
   )
+
   const prefixes = useMemo(() => allPrefixes(actionable), [actionable])
 
   const open = async (id: string) => {
     await navigate({ to: ".", search: (s) => ({ ...s, issue: id }) })
   }
+
   const toTable = async (search: TableSearch) => {
     await navigate({ to: "/table", search })
   }
@@ -183,6 +205,7 @@ function Dashboard() {
   if (isLoading) {
     return <p className="text-muted">loading…</p>
   }
+
   if (error) {
     return <p className="text-st-blocked">error: {error.message}</p>
   }
@@ -355,6 +378,7 @@ function SequenceTimeline({
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-5">
       {items.map((i, idx) => {
         const deps = prereqs.get(i.id) ?? []
+
         return (
           <button
             key={i.id}

@@ -18,6 +18,7 @@ declare module "@tanstack/react-router" {
 const queryClient = new QueryClient()
 
 const rootEl = document.querySelector("#root")
+
 if (rootEl) {
   createRoot(rootEl).render(
     <StrictMode>

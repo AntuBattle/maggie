@@ -20,7 +20,9 @@ function fmt(ts?: string) {
   if (!ts) {
     return "—"
   }
+
   const d = new Date(ts)
+
   return Number.isNaN(d.getTime())
     ? ts
     : d.toISOString().slice(0, 16).replace("T", " ")
@@ -30,6 +32,7 @@ function Meta({ label, value }: { label: string; value?: string }) {
   if (!value) {
     return null
   }
+
   return (
     <div>
       <dt className="text-xs text-muted">{label}</dt>
@@ -51,6 +54,7 @@ function Section({ title, body }: { title: string; body?: string }) {
   if (!body?.trim()) {
     return null
   }
+
   return (
     <section className="mt-5">
       <h4 className="mb-1.5 text-xs font-semibold tracking-wider text-muted uppercase">
@@ -73,11 +77,13 @@ function DepList({
   if (!items?.length) {
     return null
   }
+
   // Show every link (open and closed); closed ones sort last and are dimmed so a
   // closed parent/relation is still visible rather than hidden entirely.
   const sorted = items.toSorted(
     (a, b) => (a.status === "closed" ? 1 : 0) - (b.status === "closed" ? 1 : 0),
   )
+
   return (
     <section className="mt-5">
       <h4 className="mb-1.5 text-xs font-semibold tracking-wider text-muted uppercase">
@@ -117,12 +123,14 @@ const RELATED_TYPES = ["relates-to", "related", "discovered-from"]
 
 function byType(arr: DepRef[] | undefined, types: string[]): DepRef[] {
   const set = new Set(types)
+
   return (arr ?? []).filter((d) => set.has(d.dependency_type ?? "blocks"))
 }
 
 // dedupe relates-to: it is symmetric so the same ref shows in both arrays.
 function dedupe(items: DepRef[]): DepRef[] {
   const seen = new Set<string>()
+
   return items.filter((d) => (seen.has(d.id) ? false : seen.add(d.id)))
 }
 
@@ -137,10 +145,12 @@ function Relations({
 }) {
   const deps = issue.dependencies
   const dents = issue.dependents
+
   const related = dedupe([
     ...byType(deps, RELATED_TYPES),
     ...byType(dents, RELATED_TYPES),
   ])
+
   return (
     <>
       <DepList
@@ -182,6 +192,7 @@ function CommentList({ items }: { items?: Comment[] }) {
   if (!items?.length) {
     return <p className="text-sm text-muted italic">no comments yet</p>
   }
+
   return (
     <ul className="flex flex-col gap-2">
       {items.map((c) => (

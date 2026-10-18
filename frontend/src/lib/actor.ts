@@ -17,6 +17,7 @@ function write(v: string) {
   } else {
     localStorage.removeItem(KEY)
   }
+
   for (const l of listeners) {
     l()
   }
@@ -26,10 +27,12 @@ function write(v: string) {
 // oxlint-disable-next-line promise/prefer-await-to-callbacks -- required by the React store API
 function subscribe(cb: () => void): () => void {
   listeners.add(cb)
+
   return () => listeners.delete(cb)
 }
 
 export function useActor(): [string, (v: string) => void] {
   const actor = useSyncExternalStore(subscribe, read, () => "")
+
   return [actor, write]
 }

@@ -60,6 +60,7 @@ export function globToRegExp(glob: string): RegExp {
   const escaped = glob
     .replaceAll(/[.+?^${}()|[\]\\]/g, "\\$&")
     .replaceAll("*", ".*")
+
   return new RegExp(`^${escaped}$`, "i")
 }
 
@@ -67,6 +68,7 @@ export function applyFilters(issues: Issue[], f: Filters): Issue[] {
   const text = f.text.trim().toLowerCase()
   const glob = f.idGlob.trim()
   const re = glob ? globToRegExp(glob) : null
+
   return issues.filter((i) => {
     if (
       text &&
@@ -77,24 +79,31 @@ export function applyFilters(issues: Issue[], f: Filters): Issue[] {
     ) {
       return false
     }
+
     if (re && !re.test(i.id)) {
       return false
     }
+
     if (!f.statuses.includes(i.status)) {
       return false
     }
+
     if (f.priority !== "all" && i.priority !== f.priority) {
       return false
     }
+
     if (f.type !== "all" && i.issue_type !== f.type) {
       return false
     }
+
     if (f.assignee !== "all" && (i.assignee ?? "") !== f.assignee) {
       return false
     }
+
     if (f.label !== "all" && !(i.labels ?? []).includes(f.label)) {
       return false
     }
+
     return true
   })
 }
@@ -103,13 +112,16 @@ function cmp(a: Issue, b: Issue, key: SortKey): number {
   if (key === "priority") {
     return a.priority - b.priority
   }
+
   const av = a[key] ?? ""
   const bv = b[key] ?? ""
+
   return av.localeCompare(bv)
 }
 
 export function sortIssues(issues: Issue[], s: Sort): Issue[] {
   const sorted = issues.toSorted((a, b) => cmp(a, b, s.key))
+
   return s.dir === "asc" ? sorted : sorted.toReversed()
 }
 
@@ -148,6 +160,7 @@ export function paramsToFilters(s: TableSearch): Filters {
   const sts = s.st
     ? s.st.split(",").filter((v): v is Status => STATUS_SET.has(v))
     : [...ALL_STATUSES]
+
   return {
     text: s.q ?? "",
     idGlob: s.idg ?? "",
@@ -178,6 +191,7 @@ export function toSortDir(v: unknown): Sort["dir"] | undefined {
   if (v === "asc" || v === "desc") {
     return v
   }
+
   return undefined
 }
 
@@ -208,6 +222,7 @@ export function filtersToParams(f: Filters): TableSearch {
 
 export function sortToParams(s: Sort): TableSearch {
   const isDefault = s.key === DEFAULT_SORT.key && s.dir === DEFAULT_SORT.dir
+
   return {
     sort: isDefault ? undefined : s.key,
     dir: isDefault ? undefined : s.dir,
@@ -224,6 +239,7 @@ export function uniqueSorted(values: (string | undefined)[]): string[] {
 // (beads name children hierarchically, e.g. mulga-siv-231.7.4 -> mulga-siv-231).
 export function rootId(id: string): string {
   const dot = id.indexOf(".")
+
   return dot === -1 ? id : id.slice(0, dot)
 }
 
@@ -232,6 +248,7 @@ export function rootId(id: string): string {
 export function idPrefix(id: string): string {
   const root = rootId(id)
   const dash = root.lastIndexOf("-")
+
   return dash === -1 ? root : root.slice(0, dash)
 }
 
@@ -250,8 +267,10 @@ export function buildGroups(rows: Issue[]): GroupNode[] {
   const byId = new Map(rows.map((i) => [i.id, i]))
   const childrenOf = new Map<string, Issue[]>()
   const children = new Set<string>()
+
   for (const i of rows) {
     const root = rootId(i.id)
+
     if (root !== i.id && byId.has(root)) {
       children.add(i.id)
       const list = childrenOf.get(root) ?? []
@@ -259,11 +278,14 @@ export function buildGroups(rows: Issue[]): GroupNode[] {
       childrenOf.set(root, list)
     }
   }
+
   const nodes: GroupNode[] = []
+
   for (const i of rows) {
     if (children.has(i.id)) {
       continue
     }
+
     const kids = childrenOf.get(i.id)
     nodes.push(
       kids?.length
@@ -271,6 +293,7 @@ export function buildGroups(rows: Issue[]): GroupNode[] {
         : { kind: "loose", issue: i },
     )
   }
+
   return nodes
 }
 
@@ -290,23 +313,29 @@ export function allLabels(issues: Issue[]): string[] {
 export function buildLabelGroups(rows: Issue[]): LabelGroup[] {
   const byLabel = new Map<string, Issue[]>()
   const unlabeled: Issue[] = []
+
   for (const i of rows) {
     const labels = i.labels ?? []
+
     if (!labels.length) {
       unlabeled.push(i)
       continue
     }
+
     for (const l of labels) {
       const list = byLabel.get(l) ?? []
       list.push(i)
       byLabel.set(l, list)
     }
   }
+
   const groups: LabelGroup[] = [...byLabel.keys()]
     .toSorted((a, b) => a.localeCompare(b))
     .map((label) => ({ label, issues: byLabel.get(label) ?? [] }))
+
   if (unlabeled.length) {
     groups.push({ label: "", issues: unlabeled })
   }
+
   return groups
 }

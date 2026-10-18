@@ -40,6 +40,7 @@ export function StatusBadge({ status }: { status: Status }) {
 
 export function PriorityBadge({ priority }: { priority: number }) {
   const style = PRIORITY_STYLE[priority] ?? PRIORITY_STYLE[4]
+
   return <span className={`${PILL} ${style}`}>P{priority}</span>
 }
 
@@ -48,20 +49,24 @@ export function TypeBadge({ type }: { type: string }) {
     type === "epic"
       ? "bg-accent/15 text-accent ring-accent/30"
       : "bg-surface2 text-muted ring-line"
+
   return <span className={`${PILL} ${style}`}>{type}</span>
 }
 
 // labelHue maps a label to a stable hue so each tag keeps one colour everywhere.
 export function labelHue(label: string): number {
   let h = 0
+
   for (let i = 0; i < label.length; i++) {
     h = (h * 31 + (label.codePointAt(i) ?? 0)) % 360
   }
+
   return h
 }
 
 export function LabelChip({ label }: { label: string }) {
   const h = labelHue(label)
+
   return (
     <span
       className={`${PILL} ring-1 ring-inset`}

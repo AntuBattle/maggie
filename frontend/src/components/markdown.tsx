@@ -21,9 +21,11 @@ function CodeSpan({
   className?: string
 }) {
   const inPre = useContext(InPreContext)
+
   if (inPre) {
     return <code className={className}>{children}</code>
   }
+
   return (
     <code className="rounded bg-surface2 px-1 py-0.5 font-mono text-[0.85em]">
       {children}

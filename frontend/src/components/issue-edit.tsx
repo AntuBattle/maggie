@@ -10,6 +10,7 @@ import { useActors, useAddComment, useAddDep, useUpdateIssue } from "@/queries"
 
 const INPUT =
   "rounded-md border border-line bg-bg px-2 py-1 text-sm focus:border-accent focus:outline-none disabled:opacity-50"
+
 const BTN =
   "rounded-md border border-line px-2 py-1 text-muted text-xs hover:border-accent hover:text-text disabled:opacity-50"
 
@@ -23,11 +24,13 @@ interface Ctx {
 function usePatch(issue: Issue, actor: string) {
   const m = useUpdateIssue()
   const disabled = !actor || m.isPending
+
   const patch = (p: UpdatePayload) => {
     if (actor) {
       m.mutate({ id: issue.id, actor, patch: p })
     }
   }
+
   return { patch, disabled }
 }
 
@@ -47,6 +50,7 @@ function ChipEditor({
   children: ReactNode
 }) {
   const [editing, setEditing] = useState(false)
+
   if (editing && !disabled) {
     return (
       <select
@@ -70,6 +74,7 @@ function ChipEditor({
       </select>
     )
   }
+
   return (
     <button
       type="button"
@@ -112,11 +117,14 @@ function InlineText({
     if (disabled) {
       return
     }
+
     setDraft(value)
     setEditing(true)
   }
+
   const commit = () => {
     setEditing(false)
+
     if (draft !== value) {
       onSave(draft)
     }
@@ -144,6 +152,7 @@ function InlineText({
         />
       )
     }
+
     return (
       <>
         <input
@@ -191,16 +200,21 @@ function InlineText({
         <Markdown text={value} />
       )
     }
+
     const onClick = (e: MouseEvent<HTMLDivElement>) => {
       const { target } = e
+
       if (target instanceof HTMLElement && target.closest("a, pre")) {
         return
       }
+
       if (window.getSelection()?.toString()) {
         return
       }
+
       start()
     }
+
     return (
       // The hover/focus pencil button below is the keyboard path into editing.
       // oxlint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- markdown cannot nest in a button
@@ -247,12 +261,14 @@ function InlineText({
 
 export function StatusEditor({ issue, actor }: Ctx) {
   const { patch, disabled } = usePatch(issue, actor)
+
   return (
     <ChipEditor
       value={issue.status}
       disabled={disabled}
       onChange={(v) => {
         const status = ALL_STATUSES.find((s) => s === v)
+
         if (status) {
           patch({ status })
         }
@@ -269,6 +285,7 @@ export function StatusEditor({ issue, actor }: Ctx) {
 
 export function PriorityEditor({ issue, actor }: Ctx) {
   const { patch, disabled } = usePatch(issue, actor)
+
   return (
     <ChipEditor
       value={String(issue.priority)}
@@ -289,6 +306,7 @@ export function PriorityEditor({ issue, actor }: Ctx) {
 export function AssigneeEditor({ issue, actor }: Ctx) {
   const { patch, disabled } = usePatch(issue, actor)
   const { data: roster } = useActors()
+
   return (
     <InlineText
       value={issue.assignee ?? ""}
@@ -309,8 +327,10 @@ export function EditableText({
   field,
 }: Ctx & { title: string; field: "description" | "notes" | "acceptance" }) {
   const { patch, disabled } = usePatch(issue, actor)
+
   const value =
     (field === "acceptance" ? issue.acceptance_criteria : issue[field]) ?? ""
+
   return (
     <section className="mt-5">
       <h4 className="mb-1.5 text-xs font-semibold tracking-wider text-muted uppercase">
@@ -338,15 +358,20 @@ export function LabelEditor({ issue, actor, issues }: Ctx) {
   const [draft, setDraft] = useState("")
   const listId = useId()
   const labels = issue.labels ?? []
+
   const add = () => {
     const l = draft.trim()
+
     if (l && !labels.includes(l)) {
       patch({ add_labels: [l] })
     }
+
     setDraft("")
     setAdding(false)
   }
+
   let adder: ReactNode = null
+
   if (!disabled) {
     adder = adding ? (
       <form
@@ -392,6 +417,7 @@ export function LabelEditor({ issue, actor, issues }: Ctx) {
       </button>
     )
   }
+
   return (
     <div className="mt-3 flex flex-wrap items-center gap-1.5">
       {labels.map((l) => (
@@ -429,17 +455,21 @@ export function DepAdder({ issue, actor, issues }: Ctx) {
   const [type, setType] = useState<DepType>("blocks")
   const [target, setTarget] = useState("")
   const listId = useId()
+
   const add = () => {
     const t = target.trim()
+
     if (actor && t && t !== issue.id) {
       m.mutate({ id: issue.id, actor, dependsOn: t, type })
       setTarget("")
       setOpenForm(false)
     }
   }
+
   if (disabled && !openForm) {
     return null
   }
+
   if (!openForm) {
     return (
       <button
@@ -453,6 +483,7 @@ export function DepAdder({ issue, actor, issues }: Ctx) {
       </button>
     )
   }
+
   return (
     <form
       className="mt-3 flex flex-wrap gap-1.5"
@@ -467,6 +498,7 @@ export function DepAdder({ issue, actor, issues }: Ctx) {
         disabled={disabled}
         onChange={(e) => {
           const next = DEP_TYPES.find((d) => d.value === e.target.value)
+
           if (next) {
             setType(next.value)
           }
@@ -521,12 +553,14 @@ export function CommentForm({ issue, actor }: Ctx) {
   const m = useAddComment()
   const disabled = !actor || m.isPending
   const [text, setText] = useState("")
+
   const submit = () => {
     if (actor && text.trim()) {
       m.mutate({ id: issue.id, actor, text: text.trim() })
       setText("")
     }
   }
+
   return (
     <form
       className="mt-3 flex flex-col gap-1.5"

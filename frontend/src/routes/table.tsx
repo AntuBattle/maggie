@@ -26,14 +26,17 @@ function Table() {
 
   const filters = paramsToFilters(search)
   const sort = paramsToSort(search)
+
   const rows = useMemo(
     () => sortIssues(applyFilters(data ?? [], filters), sort),
     [data, filters, sort],
   )
+
   const groups = useMemo(
     () => (mode === "epic" ? buildGroups(rows) : undefined),
     [mode, rows],
   )
+
   const labelGroups = useMemo(
     () => (mode === "label" ? buildLabelGroups(rows) : undefined),
     [mode, rows],
@@ -42,6 +45,7 @@ function Table() {
   const onSortChange = async (s: Sort) => {
     await navigate({ to: ".", search: (p) => ({ ...p, ...sortToParams(s) }) })
   }
+
   const select = async (id: string) => {
     await navigate({ to: ".", search: (s) => ({ ...s, issue: id }) })
   }
@@ -49,6 +53,7 @@ function Table() {
   if (isLoading) {
     return <p className="text-muted">loading…</p>
   }
+
   if (error) {
     return <p className="text-st-blocked">error: {error.message}</p>
   }

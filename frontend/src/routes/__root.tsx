@@ -67,16 +67,20 @@ function RootLayout() {
   const closeDetail = async () => {
     await navigate({ to: ".", search: (s) => ({ ...s, issue: undefined }) })
   }
+
   const openIssue = async (open: string) => {
     await navigate({ to: ".", search: (s) => ({ ...s, issue: open }) })
   }
+
   const onFilters = async (f: Filters) => {
     await navigate({
       to: ".",
       search: (s) => ({ ...s, ...filtersToParams(f) }),
     })
   }
+
   const groupMode: GroupMode = search.group ?? "none"
+
   const onGroupMode = async (m: GroupMode) => {
     await navigate({
       to: ".",

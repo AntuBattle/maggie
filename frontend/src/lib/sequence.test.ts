@@ -27,6 +27,7 @@ describe("suggestSequence", () => {
       issue("b", { status: "deferred" }),
       issue("c"),
     ]
+
     expect(ids(suggestSequence(rows, []))).toEqual(["c"])
   })
 
@@ -47,6 +48,7 @@ describe("suggestSequence", () => {
       issue("b", { priority: 1 }),
       issue("c", { priority: 2 }),
     ]
+
     const edges = [edge("c", "b"), edge("b", "a")]
     expect(ids(suggestSequence(rows, edges))).toEqual(["c", "b", "a"])
   })
@@ -71,6 +73,7 @@ describe("suggestSequence", () => {
       issue("a", { priority: 0 }),
       issue("done", { status: "closed" }),
     ]
+
     expect(ids(suggestSequence(rows, [edge("done", "a")]))).toEqual(["a"])
   })
 
@@ -79,6 +82,7 @@ describe("suggestSequence", () => {
       issue("a", { priority: 0 }),
       issue("b", { status: "in_progress", priority: 4 }),
     ]
+
     expect(ids(suggestSequence(rows, []))).toEqual(["b", "a"])
   })
 
@@ -87,6 +91,7 @@ describe("suggestSequence", () => {
       issue("a", { status: "blocked", priority: 0 }),
       issue("b", { status: "open", priority: 4 }),
     ]
+
     expect(ids(suggestSequence(rows, []))).toEqual(["b", "a"])
   })
 
@@ -103,6 +108,7 @@ describe("suggestSequence", () => {
       issue("b", { priority: 1, labels: ["db"] }),
       issue("c", { priority: 1, labels: ["ui"] }),
     ]
+
     expect(ids(suggestSequence(rows, []))).toEqual(["a", "c", "b"])
   })
 
@@ -112,6 +118,7 @@ describe("suggestSequence", () => {
       issue("b", { priority: 1, labels: ["db"] }),
       issue("c", { priority: 3, labels: ["ui"] }),
     ]
+
     expect(ids(suggestSequence(rows, []))).toEqual(["a", "b", "c"])
   })
 
@@ -120,6 +127,7 @@ describe("suggestSequence", () => {
       issue("old", { updated_at: "2026-01-01T00:00:00Z" }),
       issue("new", { updated_at: "2026-06-01T00:00:00Z" }),
     ]
+
     expect(ids(suggestSequence(rows, []))).toEqual(["new", "old"])
   })
 
@@ -128,6 +136,7 @@ describe("suggestSequence", () => {
       issue("bad", { updated_at: "not a date" }),
       issue("good", { updated_at: "2026-06-01T00:00:00Z" }),
     ]
+
     expect(ids(suggestSequence(rows, []))).toEqual(["good", "bad"])
   })
 
