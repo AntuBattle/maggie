@@ -14,7 +14,7 @@ ARG DOLT_VERSION=2.1.10
 # --- frontend bundle ---
 # cmd/maggie/web is generated and not committed, so the image builds it rather
 # than depending on one a local `make build-ui` happened to leave behind.
-FROM node:24.14.0-bookworm-slim@sha256:d8e448a56fc63242f70026718378bd4b00f8c82e78d20eefb199224a4d8e33d8 AS ui-build
+FROM node:24.22.1-bookworm-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS ui-build
 WORKDIR /src/frontend
 RUN corepack enable
 # Dependencies first: the lockfile changes far less often than the sources, so
