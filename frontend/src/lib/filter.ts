@@ -179,6 +179,8 @@ export function paramsToSort(s: TableSearch): Sort {
   }
 }
 
+const GROUP_MODES: GroupMode[] = ["none", "epic", "label"]
+
 // toSortKey / toSortDir / toGroupMode narrow raw URL or form values onto their
 // domain type, returning undefined when the value is not one of them. They are
 // the parse boundary, so unknown input is the point.
@@ -200,8 +202,6 @@ export function toGroupMode(v: unknown): GroupMode | undefined {
 }
 
 /* oxlint-enable anti-slop/no-unknown-parameters */
-
-const GROUP_MODES: GroupMode[] = ["none", "epic", "label"]
 
 // filtersToParams / sortToParams emit only non-default values so shared URLs
 // stay short. Defaults map to undefined, which removes the key on navigate.
