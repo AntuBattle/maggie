@@ -20,20 +20,11 @@ function less(a: number[], b: number[]): boolean {
   return false
 }
 
-// suggestSequence orders beads into a logical "tackle next" list. Solid graph
-// edges (from blocks to) force prerequisites first via a Kahn-style topological
-// walk. When several beads are unblocked it breaks ties by: active work first,
-// then priority, then label affinity with the previous pick (so loosely related
-// beads stay grouped), then most-recently updated.
-export function suggestSequence(
-  issues: Issue[],
+// Solid edges between two actionable beads make the source a prerequisite.
+function buildBlockers(
+  inSet: Set<string>,
   edges: Edge[],
-  limit = 16,
-): Issue[] {
-  const actionable = issues.filter((i) => STATUS_RANK.has(i.status))
-  const inSet = new Set(actionable.map((i) => i.id))
-  const byId = new Map(actionable.map((i) => [i.id, i]))
-
+): Map<string, Set<string>> {
   const blockers = new Map<string, Set<string>>()
 
   for (const id of inSet) {
@@ -47,6 +38,62 @@ export function suggestSequence(
 
     blockers.get(e.to)?.add(e.from)
   }
+
+  return blockers
+}
+
+function sortKey(i: Issue, prevLabels: Set<string>): number[] {
+  const affinity = (i.labels ?? []).some((l) => prevLabels.has(l)) ? 0 : 1
+  const updated = Date.parse(i.updated_at ?? "")
+
+  return [
+    STATUS_RANK.get(i.status) ?? 3,
+    i.priority,
+    affinity,
+    Number.isNaN(updated) ? 0 : -updated,
+  ]
+}
+
+function pickBest(
+  candidates: string[],
+  byId: Map<string, Issue>,
+  prevLabels: Set<string>,
+): string | null {
+  let best: string | null = null
+  let bestKey: number[] | null = null
+
+  for (const id of candidates) {
+    const i = byId.get(id)
+
+    if (!i) {
+      continue
+    }
+
+    const key = sortKey(i, prevLabels)
+
+    if (!bestKey || less(key, bestKey)) {
+      bestKey = key
+      best = id
+    }
+  }
+
+  return best
+}
+
+// suggestSequence orders beads into a logical "tackle next" list. Solid graph
+// edges (from blocks to) force prerequisites first via a Kahn-style topological
+// walk. When several beads are unblocked it breaks ties by: active work first,
+// then priority, then label affinity with the previous pick (so loosely related
+// beads stay grouped), then most-recently updated.
+export function suggestSequence(
+  issues: Issue[],
+  edges: Edge[],
+  limit = 16,
+): Issue[] {
+  const actionable = issues.filter((i) => STATUS_RANK.has(i.status))
+  const inSet = new Set(actionable.map((i) => i.id))
+  const byId = new Map(actionable.map((i) => [i.id, i]))
+  const blockers = buildBlockers(inSet, edges)
 
   const remaining = new Set(inSet)
   const done = new Set<string>()
@@ -67,32 +114,7 @@ export function suggestSequence(
     const pool = [...remaining].filter((id) => !blocked(id))
     // Fall back to everything left if a cycle leaves nothing unblocked.
     const candidates = pool.length ? pool : [...remaining]
-    const prev = prevLabels
-    let best: string | null = null
-    let bestKey: number[] | null = null
-
-    for (const id of candidates) {
-      const i = byId.get(id)
-
-      if (!i) {
-        continue
-      }
-
-      const affinity = (i.labels ?? []).some((l) => prev.has(l)) ? 0 : 1
-      const updated = Date.parse(i.updated_at ?? "")
-
-      const key = [
-        STATUS_RANK.get(i.status) ?? 3,
-        i.priority,
-        affinity,
-        Number.isNaN(updated) ? 0 : -updated,
-      ]
-
-      if (!bestKey || less(key, bestKey)) {
-        bestKey = key
-        best = id
-      }
-    }
+    const best = pickBest(candidates, byId, prevLabels)
 
     if (!best) {
       break
