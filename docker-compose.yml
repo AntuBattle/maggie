@@ -34,6 +34,9 @@ services:
       # Identity roster for edits, seeding the "acting as" picker: a
       # comma-separated list. Leave it unset and users type their own name.
       MAGGIE_ACTORS: "${MAGGIE_ACTORS:-}"
+      # Host names the UI is reached by, comma-separated. Unset accepts any
+      # Host; set it to the team's hostname to refuse every other one.
+      MAGGIE_ALLOWED_HOSTS: "${MAGGIE_ALLOWED_HOSTS:-}"
     ports:
       # Serve on host port 80 so the team can reach it by hostname (no :port).
       # Override with MAGGIE_PORT for local dev if 80 is taken.

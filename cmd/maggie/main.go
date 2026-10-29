@@ -66,8 +66,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	slog.Info("maggie listening", "addr", addr, "beads_dir", dir)
-	srv := httpServer(addr, handlerChain(routes(bd, actors, sub)))
+	allowed, err := allowedHosts(addr, os.Getenv("MAGGIE_ALLOWED_HOSTS"))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "maggie:", err)
+		os.Exit(1)
+	}
+
+	slog.Info("maggie listening", "addr", addr, "beads_dir", dir,
+		"allowed_hosts", hostList(allowed))
+	srv := httpServer(addr, handlerChain(allowed, routes(bd, actors, sub)))
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -98,9 +105,17 @@ const bdTimeout = 15 * time.Second
 
 // handlerChain wraps the route table in the middleware every response passes
 // through. Compression sits inside the header middleware so the security
-// headers are set once, on the outermost writer.
-func handlerChain(h http.Handler) http.Handler {
-	return securityHeaders(compress(h))
+// headers are set once, on the outermost writer. The Host check runs before
+// anything else reaches the routes; allowed is allowedHosts' result.
+//
+// The write endpoints decode any body as JSON whatever its Content-Type, so a
+// cross-site page could post one as a text/plain "simple" request, which skips
+// the CORS preflight. CrossOriginProtection refuses unsafe methods a browser
+// marks as cross-origin (Sec-Fetch-Site, else Origin against Host); a client
+// that sends neither header, such as curl or a script, is not a browser and so
+// cannot be driven by a foreign page.
+func handlerChain(allowed map[string]bool, h http.Handler) http.Handler {
+	return securityHeaders(hostCheck(allowed, http.NewCrossOriginProtection().Handler(compress(h))))
 }
 
 // httpServer builds the listener's server with every timeout set. WriteTimeout
