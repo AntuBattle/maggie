@@ -211,7 +211,11 @@ func TestCompressAppliesToTheSPABundle(t *testing.T) {
 		"assets/app.js": {Data: []byte(strings.Repeat("console.log(1);", 200))},
 	}
 	bd := beads.New("bd", t.TempDir(), time.Second)
-	srv := httptest.NewServer(handlerChain(routes(bd, nil, web)))
+	allowed, err := allowedHosts("127.0.0.1:0", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewServer(handlerChain(allowed, routes(bd, nil, web)))
 	t.Cleanup(srv.Close)
 
 	c := srv.Client()

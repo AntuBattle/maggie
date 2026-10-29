@@ -117,6 +117,7 @@ All configuration is environment variables. There is no config file.
 | `MAGGIE_BD_BIN` | `bd` | Path to the `bd` binary |
 | `MAGGIE_ACTORS` | — | Comma-separated identity roster for the edit picker |
 | `MAGGIE_LOG_LEVEL` | `info` | `debug`, `info`, `warn` or `error` |
+| `MAGGIE_ALLOWED_HOSTS` | — | Comma-separated extra host names maggie answers to (see [Security](#security)) |
 
 ## Deployment
 
@@ -159,6 +160,10 @@ make dev    # Vite on :3001, proxying /api -> :8088, with hot reload (terminal 2
 **Maggie has no authentication.** Anyone who can reach the port can read and modify every issue in the store.
 
 Run it on a trusted network, or behind an authenticating reverse proxy that terminates TLS. If you use the compose stack, keep the Dolt port (`3307`) internal and never publish it.
+
+**Host check.** When `MAGGIE_ADDR` binds a loopback address (`127.0.0.0/8`, `::1` or `localhost`), maggie answers only requests whose `Host` is `localhost`, `127.0.0.1`, `[::1]` or the bind host, and rejects any other with `403`. This stops a web page from reaching it through DNS rebinding. To browse it under another name, such as an `/etc/hosts` alias or a local proxy that keeps the `Host` header, list that name in `MAGGIE_ALLOWED_HOSTS` (for example `MAGGIE_ALLOWED_HOSTS=maggie`). Ports are ignored. On any other bind, such as the default `:8088`, every `Host` is accepted unless `MAGGIE_ALLOWED_HOSTS` is set, in which case only the listed names and the loopback names are.
+
+**Cross-origin writes.** Write requests (`POST`) that a browser marks as coming from another origin, by `Sec-Fetch-Site` or by an `Origin` that does not match `Host`, are rejected with `403`. Clients that send neither header, such as `curl` or scripts, are not affected.
 
 To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
