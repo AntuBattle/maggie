@@ -118,6 +118,10 @@ func TestHostCheck(t *testing.T) {
 		{"evil.example:8088", false},
 		{"localhost.evil.example:8088", false},
 		{"127.0.0.1.nip.io:8088", false},
+		{"localhost.:8088", false},
+		{"[::1%25lo]:8088", false},
+		{"[0:0:0:0:0:0:0:1]:8088", false},
+		{"127.0.0.2:8088", false},
 		{"", false},
 	} {
 		for _, p := range []string{"/", "/health", "/api/issues", "/assets/app.js"} {
